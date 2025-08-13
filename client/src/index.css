@@ -53,6 +53,13 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+/* 답변 영역 높이 제한 제거 */
+.md-answer.collapsed {
+  max-height: none !important;
+  overflow: visible !important;
+  mask-image: none !important;
+}
+
 
 @media (prefers-color-scheme: light) {
   :root {
