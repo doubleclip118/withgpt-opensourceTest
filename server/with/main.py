@@ -7,6 +7,7 @@ from bson import ObjectId
 from datetime import datetime, timezone
 import os
 
+
 from db import raw_col, dst_col
 from normalize import normalize
 
@@ -76,7 +77,14 @@ def _to_item(doc: dict) -> Item:
 
 
 # 통계/큐 공통 필터: 규정집만
+APOLOGY_REGEX = r"(?:^\s*[*_>\-]*\s*죄\s*송\s*합\s*니\s*다[.,!…」\)”']*)|(?:질문에\s*대한\s*정보.*찾을\s*수\s*없)"
 BASE_FILTER = {"봇": "규정집"}
+EXCLUDE_APOLOGY = {
+    "$nor": [
+        {"답변":   {"$regex": APOLOGY_REGEX}}
+    ]
+}
+VISIBLE_BASE = {**BASE_FILTER, **EXCLUDE_APOLOGY}
 
 # ----------------- Routes -----------------
 @app.get("/api/queue", response_model=List[Item])
@@ -84,7 +92,7 @@ def get_queue(limit: int = 20):
     """판정되지 않은(= decision 필드 없음) & 봇=규정집 만 노출"""
     cursor = raw_col.find(
         {
-            **BASE_FILTER,
+            **VISIBLE_BASE,
             "decision": {"$exists": False},
         },
         projection={
@@ -128,10 +136,10 @@ def decide(body: DecideBody):
 @app.get("/api/stats")
 def stats():
     """규정집 기준 통계"""
-    total      = raw_col.count_documents({**BASE_FILTER})
-    undecided  = raw_col.count_documents({**BASE_FILTER, "decision": {"$exists": False}})
-    yes_cnt    = raw_col.count_documents({**BASE_FILTER, "decision": "yes"})
-    no_cnt     = raw_col.count_documents({**BASE_FILTER, "decision": "no"})
+    total      = raw_col.count_documents({**VISIBLE_BASE})
+    undecided  = raw_col.count_documents({**VISIBLE_BASE, "decision": {"$exists": False}})
+    yes_cnt    = raw_col.count_documents({**VISIBLE_BASE, "decision": "yes"})
+    no_cnt     = raw_col.count_documents({**VISIBLE_BASE, "decision": "no"})
     # Rmx는 규정집만 Yes로 들어간다고 가정. (혹시 혼재 가능성 있으면 question/answer 존재 여부로 필터 가능)
     dst_cnt    = dst_col.estimated_document_count()
 
