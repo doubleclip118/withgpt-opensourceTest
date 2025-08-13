@@ -23,13 +23,21 @@ app.add_middleware(
 )
 
 # ----------------- Pydantic Models -----------------
+# ... 상단 동일
+
 class Item(BaseModel):
     id: str = Field(..., description="raw _id")
     source_id: Optional[str] = None
+    # 기존 title/content는 유지 (호환성)
     title: Optional[str] = None
     content: Optional[str] = None
+    # ✅ 새 필드
+    prompt: Optional[str] = None
+    question: Optional[str] = None
+
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
+
 
 class DecideBody(BaseModel):
     id: str
@@ -43,22 +51,29 @@ def _oid(oid_str: str) -> ObjectId:
         raise HTTPException(status_code=400, detail="invalid id")
 
 def _to_item(doc: dict) -> Item:
-    """Mongo raw 문서를 프런트용 Item으로 변환 (프롬프트 우선 제목, 한글키 fallback)"""
-    title = doc.get("프롬프트") or doc.get("질문") or doc.get("title")
-    content = doc.get("content") or doc.get("답변")
-    source_id = doc.get("source_id") or (str(doc.get("no")) if doc.get("no") is not None else None)
+    # 개별 추출
+    prompt   = doc.get("프롬프트") or doc.get("title")
+    question = doc.get("질문")
+    content  = doc.get("content") or doc.get("답변")
 
+    source_id = doc.get("source_id") or (str(doc.get("no")) if doc.get("no") is not None else None)
     created_at = (doc.get("created_at") or doc.get("등록일시") or None)
     updated_at = (doc.get("updated_at") or None)
+
+    # title은 프롬프트 우선(기존 카드 호환)
+    title = prompt or question or doc.get("title")
 
     return Item(
         id=str(doc["_id"]),
         source_id=source_id,
         title=title,
         content=content,
+        prompt=prompt,
+        question=question,
         created_at=str(created_at) if created_at else None,
         updated_at=str(updated_at) if updated_at else None,
     )
+
 
 # 통계/큐 공통 필터: 규정집만
 BASE_FILTER = {"봇": "규정집"}

@@ -5,9 +5,12 @@ export type Item = {
   source_id?: string
   title?: string
   content?: string
+  prompt?: string      // ✅ 추가
+  question?: string    // ✅ 추가
   created_at?: string
   updated_at?: string
 }
+
 
 export async function fetchQueue(limit = 20): Promise<Item[]> {
   const res = await fetch(`${BASE}/api/queue?limit=${limit}`)

@@ -10,7 +10,9 @@ export default function ReviewCard({ item, onDone }:{
   const [loading, setLoading] = useState<"yes"|"no"|null>(null)
   const [expanded, setExpanded] = useState(false)
 
-  const question = useMemo(() => (item.title ?? "").trim(), [item.title])
+  // 백엔드가 분리해서 주는 값 사용, 없으면 호환용 fallback
+  const prompt   = useMemo(() => (item.prompt ?? item.title ?? "").trim(), [item.prompt, item.title])
+  const question = useMemo(() => (item.question ?? "").trim(), [item.question])
   const answer   = useMemo(() => (item.content ?? "").trim(), [item.content])
 
   const tryDecide = async (d:"yes"|"no") => {
@@ -27,7 +29,7 @@ export default function ReviewCard({ item, onDone }:{
 
   return (
     <div className="card card-full">
-      {/* 상단 메타 */}
+      {/* 메타 */}
       <div className="meta">
         <span className="badge">규정집</span>
         <span className="meta-dot">•</span>
@@ -38,30 +40,46 @@ export default function ReviewCard({ item, onDone }:{
         </>}
       </div>
 
-      {/* 질문 (위) */}
-      <section className="section">
-        <div className="section-title">질문</div>
-        <div className="md md-wide">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {question || "(질문 없음)"}
-          </ReactMarkdown>
+      {/* ✅ 프롬프트 카드 */}
+      <div className="subcard">
+        <div className="subcard-title">프롬프트</div>
+        <div className="subcard-body scrollable">
+          <div className="md">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {prompt || "(프롬프트 없음)"}
+            </ReactMarkdown>
+          </div>
         </div>
-      </section>
+      </div>
 
-      {/* 답변 (아래, 넓은 폭 + 접기/펼치기) */}
-      <section className="section">
-        <div className="section-title">답변</div>
-        <div className={`md md-wide ${expanded ? "answer-open" : "answer-collapsed"}`}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {answer || "(답변 없음)"}
-          </ReactMarkdown>
+      {/* ✅ 질문 카드 */}
+      <div className="subcard">
+        <div className="subcard-title">질문</div>
+        <div className="subcard-body scrollable">
+          <div className="md">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {question || "(질문 없음)"}
+            </ReactMarkdown>
+          </div>
+        </div>
+      </div>
+
+      {/* ✅ 답변 카드 (기본 접힘) */}
+      <div className="subcard">
+        <div className="subcard-title">답변</div>
+        <div className={`subcard-body ${expanded ? "answer-open" : "answer-collapsed"}`}>
+          <div className="md">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {answer || "(답변 없음)"}
+            </ReactMarkdown>
+          </div>
         </div>
         {answer && answer.length > 300 && (
           <button className="link-btn" onClick={()=>setExpanded(v=>!v)}>
             {expanded ? "접기" : "더 보기"}
           </button>
         )}
-      </section>
+      </div>
 
       {/* 하단 버튼 */}
       <div className="actions">
