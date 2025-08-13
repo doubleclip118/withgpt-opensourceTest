@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+.env
+server/.env
+server/with/         
+server/.venv/
+server/.pytest_cache/
+
+# Node/React
+client/node_modules/
+client/dist/
+client/.env
+
+# OS/IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
