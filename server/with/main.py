@@ -41,7 +41,7 @@ def _oid(oid_str: str) -> ObjectId:
 
 def _to_item(doc: dict) -> Item:
     # title/content/source_id가 없을 때 한글 키로 fallback
-    title = doc.get("title") or doc.get("질문") or doc.get("프롬프트")
+    title = doc.get("프롬프트") or doc.get("질문") or doc.get("title")
     content = doc.get("content") or doc.get("답변")
     source_id = doc.get("source_id") or (str(doc.get("no")) if doc.get("no") is not None else None)
 
